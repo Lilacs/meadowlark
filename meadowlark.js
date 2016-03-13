@@ -1,6 +1,7 @@
 var express = require('express');
 var fortunes = require('./lib/fortune.js');
-
+var formidable = require('formidable');
+var upload = require('jquery-file-upload-middleware');
 var app = express();
 var handlebars = require('express3-handlebars').create({
     defaultLayout: 'main',
@@ -73,6 +74,18 @@ app.get('/about', function (req, res) {
     res.render('about', {fortune: fortunes.getFortune(), pageTestScript: '/qa/tests-about.js'});
 });
 
+app.use('/upload', function(req, res, next){
+    upload.fileHandler({
+        uploadDir: function () {
+            return __dirname + '/public/uploads/'
+        },
+        uploadUrl: function () {
+            return '/uploads'
+        }
+    })(req, res, next);
+});
+
+
 app.get('/tours/hood-river', function (req, res) {
     res.render('tours/hood-river');
 });
@@ -90,6 +103,23 @@ app.get('/data/nursery-rhyme', function(req, res){
         bodyPart: 'tail',
         adjective: 'bushy',
         noun: 'heck',
+    });
+});
+
+app.get('/contest/vacation-photo', function(req, res){
+    var now = new Date();
+    res.render('contest/vacation-photo', {year: now.getFullYear(), month: now.getMonth()});
+});
+
+app.post('/contest/vacation-photo/:year/:month', function(req, res) {
+    var form = new formidable.IncomingForm();
+    form.parse(req, function(err, fields, files) {
+        if(err) return res.redirect(303, '/error');
+        console.log('received fields : ');
+        console.log(fields);
+        console.log('recevied files : ');
+        console.log(files);
+        res.redirect(303, '/thank-you');
     });
 });
 
